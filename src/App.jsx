@@ -27,6 +27,11 @@ import {
   Layers,
   Edit,
   Trash,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  MapPin,
+  Calendar,
 } from "lucide-react";
 import api from "./api";
 import Login from "./Login";
@@ -72,63 +77,343 @@ const StatCard = ({ title, value, change, icon: Icon, color }) => (
   </div>
 );
 
-const Dashboard = () => (
-  <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <StatCard
-        title="Total Revenue"
-        value="₹1,28,430"
-        change="+12.5%"
-        icon={TrendingUp}
-        color="emerald"
-      />
-      <StatCard
-        title="Total Orders"
-        value="842"
-        change="+8.2%"
-        icon={ShoppingBag}
-        color="blue"
-      />
-      <StatCard
-        title="Active Users"
-        value="1,204"
-        change="+5.1%"
-        icon={Users}
-        color="purple"
-      />
-      <StatCard
-        title="Avg. Ticket"
-        value="₹152"
-        change="-2.4%"
-        icon={CreditCard}
-        color="amber"
-      />
-    </div>
-    <div className="bg-[#1e1e1e] p-6 rounded-3xl border border-gray-800">
-      <h3 className="text-xl font-bold text-white mb-6">System Status</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="p-4 rounded-2xl bg-gray-900/50 border border-gray-800 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-            <span className="text-sm font-medium">Database Connection</span>
+const Dashboard = () => {
+  const [stats, setStats] = useState({
+    totalRevenue: 0,
+    itemRevenue: 0,
+    deliveryRevenue: 0,
+    handlingRevenue: 0,
+    totalOrders: 0,
+    deliveredOrders: 0,
+    incompleteOrders: 0,
+    recentOrders: [],
+    statusBreakdown: [],
+  });
+  const [shops, setShops] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [shopId, setShopId] = useState("");
+  const [startDate, setStartDate] = useState(
+    new Date(new Date().setDate(new Date().getDate() - 30))
+      .toISOString()
+      .split("T")[0]
+  );
+  const [endDate, setEndDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+
+  const fetchShops = async () => {
+    try {
+      const response = await api.get("/admin/shops");
+      setShops(response.data.shops);
+    } catch (err) {
+      console.error("Failed to fetch shops", err);
+    }
+  };
+
+  const fetchStats = async () => {
+    setLoading(true);
+    try {
+      const params = {
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        shopId: shopId || undefined,
+      };
+      const response = await api.get("/admin/dashboard-stats", { params });
+      setStats(response.data.stats);
+    } catch (err) {
+      console.error("Failed to fetch stats", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleQuickRange = (days) => {
+    const end = new Date().toISOString().split("T")[0];
+    const start = new Date(new Date().setDate(new Date().getDate() - days))
+      .toISOString()
+      .split("T")[0];
+    setStartDate(start);
+    setEndDate(end);
+  };
+
+  const handleAllTime = () => {
+    setStartDate("");
+    setEndDate("");
+  };
+
+  useEffect(() => {
+    fetchShops();
+  }, []);
+
+  useEffect(() => {
+    fetchStats();
+  }, [startDate, endDate, shopId]);
+
+  return (
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Header & Controls */}
+      <div className="bg-[#1e1e1e] p-6 rounded-3xl border border-gray-800">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div>
+            <h3 className="text-2xl font-black text-white tracking-tight">
+              Dashboard Analytics
+            </h3>
+            <p className="text-gray-400 text-sm mt-1">
+              Dynamic performance overview & filtering
+            </p>
           </div>
-          <span className="text-emerald-500 text-xs font-black uppercase">
-            Active
-          </span>
+
+          <div className="flex flex-wrap items-center gap-4">
+            {/* Quick Ranges */}
+            <div className="flex bg-gray-900/50 p-1 rounded-2xl border border-gray-800">
+              {[
+                { label: "7D", val: 7 },
+                { label: "30D", val: 30 },
+                { label: "90D", val: 90 },
+              ].map((r) => (
+                <button
+                  key={r.label}
+                  onClick={() => handleQuickRange(r.val)}
+                  className="px-3 py-1.5 text-[10px] font-black uppercase tracking-tighter text-gray-500 hover:text-white transition-colors"
+                >
+                  {r.label}
+                </button>
+              ))}
+              <button
+                onClick={handleAllTime}
+                className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all ${
+                  !startDate && !endDate
+                    ? "bg-emerald-500 text-black shadow-lg"
+                    : "text-gray-500 hover:text-white"
+                }`}
+              >
+                All Time
+              </button>
+            </div>
+
+            {/* Shop Filter */}
+            <div className="relative group">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none group-focus-within:text-emerald-500 transition-colors">
+                <MapPin size={16} />
+              </div>
+              <select
+                value={shopId}
+                onChange={(e) => setShopId(e.target.value)}
+                className="bg-gray-900 border border-gray-800 rounded-2xl pl-11 pr-10 py-3 text-sm text-white focus:border-emerald-500 outline-none transition-all appearance-none cursor-pointer min-w-[180px]"
+              >
+                <option value="">All Shops</option>
+                {shops.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+                <Layers size={14} />
+              </div>
+            </div>
+
+            {/* Date Inputs */}
+            <div className="flex items-center gap-2 bg-gray-900 border border-gray-800 rounded-2xl p-1 px-3">
+              <div className="flex flex-col">
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="bg-transparent text-[11px] font-bold text-white outline-none cursor-pointer"
+                />
+              </div>
+              <span className="text-gray-700 font-bold px-1">/</span>
+              <div className="flex flex-col">
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="bg-transparent text-[11px] font-bold text-white outline-none cursor-pointer"
+                />
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="p-4 rounded-2xl bg-gray-900/50 border border-gray-800 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-            <span className="text-sm font-medium">Payment Gateway</span>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard
+          title="Total Revenue"
+          value={`₹${Number(stats.totalRevenue).toLocaleString()}`}
+          change="Total"
+          icon={TrendingUp}
+          color="emerald"
+        />
+        <StatCard
+          title="Item Revenue"
+          value={`₹${Number(stats.itemRevenue).toLocaleString()}`}
+          change="Products"
+          icon={Package}
+          color="blue"
+        />
+        <StatCard
+          title="Delivery Revenue"
+          value={`₹${Number(stats.deliveryRevenue).toLocaleString()}`}
+          change="Shipping"
+          icon={Truck}
+          color="purple"
+        />
+        <StatCard
+          title="Other Charges"
+          value={`₹${Number(stats.handlingRevenue).toLocaleString()}`}
+          change="Handling"
+          icon={CreditCard}
+          color="amber"
+        />
+      </div>
+
+      {/* Order Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <StatCard
+          title="Total Orders"
+          value={stats.totalOrders}
+          change="Volume"
+          icon={ShoppingBag}
+          color="emerald"
+        />
+        <StatCard
+          title="Delivered Orders"
+          value={stats.deliveredOrders}
+          change="Finalized"
+          icon={CheckCircle}
+          color="emerald"
+        />
+        <StatCard
+          title="Incomplete Orders"
+          value={stats.incompleteOrders}
+          change="In progress"
+          icon={RefreshCcw}
+          color="amber"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Status Breakdown */}
+        <div className="lg:col-span-1 bg-[#1e1e1e] p-6 rounded-3xl border border-gray-800">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold text-white">
+              Status Distribution
+            </h3>
+            <Layers className="text-emerald-500" size={20} />
           </div>
-          <span className="text-emerald-500 text-xs font-black uppercase">
-            Active
-          </span>
+          <div className="space-y-4">
+            {stats.statusBreakdown.map((item) => (
+              <div
+                key={item.status}
+                className="flex items-center justify-between p-4 rounded-2xl bg-gray-900/50 border border-gray-800 group hover:border-emerald-500/30 transition-all"
+              >
+                <div className="flex items-center space-x-3">
+                  <div
+                    className={`p-2 rounded-lg ${
+                      item.status === "DELIVERED"
+                        ? "bg-emerald-500/10 text-emerald-500"
+                        : item.status === "CANCELLED"
+                        ? "bg-rose-500/10 text-rose-500"
+                        : "bg-blue-500/10 text-blue-500"
+                    }`}
+                  >
+                    {item.status === "DELIVERED" ? (
+                      <CheckCircle size={14} />
+                    ) : item.status === "CANCELLED" ? (
+                      <AlertCircle size={14} />
+                    ) : (
+                      <Clock size={14} />
+                    )}
+                  </div>
+                  <span className="text-xs font-black uppercase tracking-widest text-gray-400 group-hover:text-white transition-colors">
+                    {item.status}
+                  </span>
+                </div>
+                <span className="text-white font-black text-lg">
+                  {item.count}
+                </span>
+              </div>
+            ))}
+            {stats.statusBreakdown.length === 0 && (
+              <p className="text-gray-500 text-center py-10 italic text-sm">
+                No data for this period
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Recent Orders */}
+        <div className="lg:col-span-2 bg-[#1e1e1e] p-6 rounded-3xl border border-gray-800">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold text-white">Latest Activity</h3>
+            <Link
+              to="/orders"
+              className="text-emerald-500 text-xs font-black uppercase tracking-widest hover:text-emerald-400"
+            >
+              View All Orders
+            </Link>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="text-[10px] font-black text-gray-500 uppercase tracking-tighter border-b border-gray-800">
+                  <th className="pb-4 pr-4">Order ID</th>
+                  <th className="pb-4 pr-4">Customer</th>
+                  <th className="pb-4 pr-4">Amount</th>
+                  <th className="pb-4">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-800/50">
+                {stats.recentOrders.map((order) => (
+                  <tr key={order.id} className="group cursor-default">
+                    <td className="py-4 pr-4">
+                      <span className="text-white font-mono text-xs font-bold bg-gray-900 px-2 py-1 rounded-lg border border-gray-800">
+                        #{order.id}
+                      </span>
+                    </td>
+                    <td className="py-4 pr-4">
+                      <p className="text-gray-300 text-sm font-bold truncate max-w-[120px]">
+                        {order.customer_name}
+                      </p>
+                    </td>
+                    <td className="py-4 pr-4 text-white font-bold text-sm">
+                      ₹{order.total_amount}
+                    </td>
+                    <td className="py-4">
+                      <span
+                        className={`text-[9px] font-black px-2 py-1 rounded-xl uppercase tracking-tighter shadow-sm ${
+                          order.status === "DELIVERED"
+                            ? "bg-emerald-500 text-black"
+                            : order.status === "CANCELLED"
+                            ? "bg-rose-500 text-white"
+                            : "bg-gray-800 text-gray-300 border border-gray-700"
+                        }`}
+                      >
+                        {order.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {stats.recentOrders.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan="4"
+                      className="py-10 text-center text-gray-500 italic text-sm"
+                    >
+                      No recent orders found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
