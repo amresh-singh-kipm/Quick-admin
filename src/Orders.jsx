@@ -11,6 +11,7 @@ import {
   MapPin,
   Package,
   Truck,
+  CreditCard,
 } from "lucide-react";
 import api from "./api";
 
@@ -279,8 +280,46 @@ const OrderManagement = () => {
                 </div>
               </div>
 
-              {/* Items Table */}
-              <div className="space-y-4">
+              {/* Payment & Delivery Info */}
+              <div className="grid grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
+                    Payment Method
+                  </h4>
+                  <div className="flex items-center space-x-2">
+                    <CreditCard className="text-emerald-500" size={16} />
+                    <span className="text-white font-bold text-sm">
+                      {selectedOrder.payment_method || 'POD'}
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
+                    Delivery Type
+                  </h4>
+                  <div className="flex items-center space-x-2">
+                    <Truck className="text-blue-500" size={16} />
+                    <span className="text-white font-bold text-sm">
+                      {selectedOrder.delivery_type || 'INSTANT'}
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
+                    Payment Status
+                  </h4>
+                  <div className="flex items-center space-x-2">
+                    <CheckCircle className="text-purple-500" size={16} />
+                    <span className="text-white font-bold text-sm">
+                      {selectedOrder.payment_status || 'COMPLETED'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Items Table */}
+            <div className="space-y-4">
                 <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
                   Items Ordered
                 </h4>
@@ -324,7 +363,6 @@ const OrderManagement = () => {
                   </table>
                 </div>
               </div>
-            </div>
 
             <div className="p-8 border-t border-gray-800 bg-gray-900/50 flex space-x-4 items-center">
               <div className="flex-1">
