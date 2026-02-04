@@ -39,6 +39,7 @@ import ProductManagement from "./Products";
 import ShopManagement from "./Shops";
 import CategoryManagement from "./Categories";
 import InventoryManagement from "./Inventory";
+import PrivacyPolicy from "./PrivacyPolicy";
 import OrderManagement from "./Orders";
 // --- COMPONENTS ---
 
@@ -320,60 +321,70 @@ const Dashboard = () => {
       <div className="bg-[#1e1e1e] p-6 rounded-3xl border border-gray-800">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-xl font-black text-white tracking-tight">Payment Breakdown</h3>
-            <p className="text-gray-400 text-sm mt-1">Earnings by payment method</p>
+            <h3 className="text-xl font-black text-white tracking-tight">Payment Method Breakdown</h3>
+            <p className="text-gray-400 text-sm mt-1">Individual earnings by payment type</p>
           </div>
           <CreditCard className="text-emerald-500" size={24} />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-gradient-to-br from-emerald-500/10 to-transparent p-6 rounded-2xl border border-emerald-500/20">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* UPI Card - Real Money */}
+          <div className="bg-gradient-to-br from-blue-600/10 to-transparent p-6 rounded-2xl border border-blue-500/20">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-emerald-400 text-xs font-black uppercase tracking-widest">Online Earnings</span>
-              <TrendingUp className="text-emerald-500" size={18} />
+              <span className="text-blue-400 text-xs font-black uppercase tracking-widest">UPI Payments</span>
+              <div className="text-blue-500 text-xl">💳</div>
             </div>
-            <p className="text-3xl font-black text-white mb-2">₹{paymentStats.online_earnings.toLocaleString()}</p>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-gray-400">UPI: ₹{paymentStats.breakdown.upi_earnings.toLocaleString()}</span>
-              <span className="text-gray-500">{paymentStats.breakdown.upi_orders} orders</span>
-            </div>
-            <div className="flex items-center justify-between text-xs mt-1">
-              <span className="text-gray-400">Wallet: ₹{paymentStats.breakdown.wallet_earnings.toLocaleString()}</span>
-              <span className="text-gray-500">{paymentStats.breakdown.wallet_orders} orders</span>
-            </div>
-            <div className="mt-3 pt-3 border-t border-emerald-500/20">
-              <span className="text-emerald-500 font-bold text-sm">{paymentStats.online_orders} total orders</span>
-            </div>
-          </div>
-          
-          <div className="bg-gradient-to-br from-blue-500/10 to-transparent p-6 rounded-2xl border border-blue-500/20">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-blue-400 text-xs font-black uppercase tracking-widest">Cash Earnings</span>
-              <CreditCard className="text-blue-500" size={18} />
-            </div>
-            <p className="text-3xl font-black text-white mb-2">₹{paymentStats.cash_earnings.toLocaleString()}</p>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-gray-400">Pay on Delivery</span>
-              <span className="text-gray-500">{paymentStats.breakdown.pod_orders} orders</span>
-            </div>
-            <div className="mt-3 pt-3 border-t border-blue-500/20">
-              <span className="text-blue-500 font-bold text-sm">{paymentStats.cash_orders} total orders</span>
+            <p className="text-3xl font-black text-white mb-2">₹{paymentStats.breakdown.upi_earnings.toLocaleString()}</p>
+            <div className="flex items-center justify-between text-xs mt-3 pt-3 border-t border-blue-500/20">
+              <span className="text-gray-400">💰 Real Money</span>
+              <span className="text-blue-500 font-bold">{paymentStats.breakdown.upi_orders} orders</span>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-purple-500/10 to-transparent p-6 rounded-2xl border border-purple-500/20">
+          {/* Wallet Card - Wallet Balance */}
+          <div className="bg-gradient-to-br from-purple-600/10 to-transparent p-6 rounded-2xl border border-purple-500/20">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-purple-400 text-xs font-black uppercase tracking-widest">Total Earnings</span>
-              <TrendingUp className="text-purple-500" size={18} />
+              <span className="text-purple-400 text-xs font-black uppercase tracking-widest">Wallet Payments</span>
+              <div className="text-purple-500 text-xl">💰</div>
+            </div>
+            <p className="text-3xl font-black text-white mb-2">₹{paymentStats.breakdown.wallet_earnings.toLocaleString()}</p>
+            <div className="flex items-center justify-between text-xs mt-3 pt-3 border-t border-purple-500/20">
+              <span className="text-gray-400">📱 Wallet Balance</span>
+              <span className="text-purple-500 font-bold">{paymentStats.breakdown.wallet_orders} orders</span>
+            </div>
+          </div>
+          
+          {/* Cash/POD Card */}
+          <div className="bg-gradient-to-br from-amber-600/10 to-transparent p-6 rounded-2xl border border-amber-500/20">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-amber-400 text-xs font-black uppercase tracking-widest">Cash on Delivery</span>
+              <div className="text-amber-500 text-xl">💵</div>
+            </div>
+            <p className="text-3xl font-black text-white mb-2">₹{paymentStats.cash_earnings.toLocaleString()}</p>
+            <div className="flex items-center justify-between text-xs mt-3 pt-3 border-t border-amber-500/20">
+              <span className="text-gray-400">💸 Cash Payment</span>
+              <span className="text-amber-500 font-bold">{paymentStats.breakdown.pod_orders} orders</span>
+            </div>
+          </div>
+
+          {/* Total Earnings Card */}
+          <div className="bg-gradient-to-br from-emerald-600/10 to-transparent p-6 rounded-2xl border border-emerald-500/20">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-emerald-400 text-xs font-black uppercase tracking-widest">Total Earnings</span>
+              <TrendingUp className="text-emerald-500" size={18} />
             </div>
             <p className="text-3xl font-black text-white mb-2">₹{paymentStats.total_earnings.toLocaleString()}</p>
-            <div className="grid grid-cols-2 gap-4 mt-4">
-              <div className="text-center p-2 bg-gray-900/50 rounded-lg">
-                <p className="text-[10px] text-gray-500 font-bold uppercase">Online</p>
-                <p className="text-emerald-500 font-black">{Math.round((paymentStats.online_earnings / paymentStats.total_earnings) * 100) || 0}%</p>
+            <div className="grid grid-cols-3 gap-1 mt-3 pt-3 border-t border-emerald-500/20">
+              <div className="text-center">
+                <p className="text-[9px] text-gray-500 font-bold uppercase">UPI</p>
+                <p className="text-blue-400 font-black text-xs">{Math.round((paymentStats.breakdown.upi_earnings / paymentStats.total_earnings) * 100) || 0}%</p>
               </div>
-              <div className="text-center p-2 bg-gray-900/50 rounded-lg">
-                <p className="text-[10px] text-gray-500 font-bold uppercase">Cash</p>
-                <p className="text-blue-500 font-black">{Math.round((paymentStats.cash_earnings / paymentStats.total_earnings) * 100) || 0}%</p>
+              <div className="text-center">
+                <p className="text-[9px] text-gray-500 font-bold uppercase">Wallet</p>
+                <p className="text-purple-400 font-black text-xs">{Math.round((paymentStats.breakdown.wallet_earnings / paymentStats.total_earnings) * 100) || 0}%</p>
+              </div>
+              <div className="text-center">
+                <p className="text-[9px] text-gray-500 font-bold uppercase">Cash</p>
+                <p className="text-amber-400 font-black text-xs">{Math.round((paymentStats.cash_earnings / paymentStats.total_earnings) * 100) || 0}%</p>
               </div>
             </div>
           </div>
@@ -869,68 +880,79 @@ function App() {
     setToken(null);
   };
 
-  if (!token) return <Login setToken={setToken} />;
-
   return (
     <Router>
       <Routes>
+        {/* Public Route - Privacy Policy */}
         <Route
-          path="/"
-          element={
-            <MainLayout handleLogout={handleLogout}>
-              <Dashboard />
-            </MainLayout>
-          }
+          path="/privacy-policy"
+          element={<PrivacyPolicy />}
         />
-        <Route
-          path="/users"
-          element={
-            <MainLayout handleLogout={handleLogout}>
-              <UserManagement />
-            </MainLayout>
-          }
-        />
-        <Route
-          path="/categories"
-          element={
-            <MainLayout handleLogout={handleLogout}>
-              <CategoryManagement />
-            </MainLayout>
-          }
-        />
-        <Route
-          path="/products"
-          element={
-            <MainLayout handleLogout={handleLogout}>
-              <ProductManagement />
-            </MainLayout>
-          }
-        />
-        <Route
-          path="/shops"
-          element={
-            <MainLayout handleLogout={handleLogout}>
-              <ShopManagement />
-            </MainLayout>
-          }
-        />
-        <Route
-          path="/inventory"
-          element={
-            <MainLayout handleLogout={handleLogout}>
-              <InventoryManagement />
-            </MainLayout>
-          }
-        />
-        <Route
-          path="/orders"
-          element={
-            <MainLayout handleLogout={handleLogout}>
-              <OrderManagement />
-            </MainLayout>
-          }
-        />
-        <Route path="*" element={<Navigate to="/" />} />
+
+        {/* Protected Routes */}
+        {!token ? (
+          <Route path="*" element={<Login setToken={setToken} />} />
+        ) : (
+          <>
+            <Route
+              path="/"
+              element={
+                <MainLayout handleLogout={handleLogout}>
+                  <Dashboard />
+                </MainLayout>
+              }
+            />
+            <Route
+              path="/users"
+              element={
+                <MainLayout handleLogout={handleLogout}>
+                  <UserManagement />
+                </MainLayout>
+              }
+            />
+            <Route
+              path="/categories"
+              element={
+                <MainLayout handleLogout={handleLogout}>
+                  <CategoryManagement />
+                </MainLayout>
+              }
+            />
+            <Route
+              path="/products"
+              element={
+                <MainLayout handleLogout={handleLogout}>
+                  <ProductManagement />
+                </MainLayout>
+              }
+            />
+            <Route
+              path="/shops"
+              element={
+                <MainLayout handleLogout={handleLogout}>
+                  <ShopManagement />
+                </MainLayout>
+              }
+            />
+            <Route
+              path="/inventory"
+              element={
+                <MainLayout handleLogout={handleLogout}>
+                  <InventoryManagement />
+                </MainLayout>
+              }
+            />
+            <Route
+              path="/orders"
+              element={
+                <MainLayout handleLogout={handleLogout}>
+                  <OrderManagement />
+                </MainLayout>
+              }
+            />
+            <Route path="*" element={<Navigate to="/" />} />
+          </>
+        )}
       </Routes>
     </Router>
   );
