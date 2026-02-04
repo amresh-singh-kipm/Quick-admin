@@ -6,7 +6,7 @@ const PrivacyPolicy = () => {
   return (
     <div className="min-h-screen bg-[#0b0c0e] text-white font-['Inter']">
       {/* Header */}
-      <div className="bg-[#1e1e1e] border-b border-gray-800">
+      {/* <div className="bg-[#1e1e1e] border-b border-gray-800">
         <div className="max-w-4xl mx-auto px-6 py-4">
           <Link
             to="/"
@@ -19,7 +19,7 @@ const PrivacyPolicy = () => {
             <span className="font-medium">Back to Login</span>
           </Link>
         </div>
-      </div>
+      </div> */}
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-6 py-12">
