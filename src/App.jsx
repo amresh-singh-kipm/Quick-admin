@@ -32,6 +32,7 @@ import {
   AlertCircle,
   MapPin,
   Calendar,
+  Shield,
 } from "lucide-react";
 import api from "./api";
 import Login from "./Login";
@@ -820,6 +821,16 @@ const MainLayout = ({ children, handleLogout }) => {
               label="Orders"
               href="/orders"
               active={location.pathname === "/orders"}
+            />
+
+            <div className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] px-4 mt-6 mb-2">
+              Legal
+            </div>
+            <SidebarItem
+              icon={Shield}
+              label="Privacy Policy"
+              href="/privacy-policy"
+              active={location.pathname === "/privacy-policy"}
             />
           </nav>
           <div className="mt-auto pt-6 border-t border-gray-800">
