@@ -7,6 +7,7 @@ import {
   Trash,
   Package,
   X,
+  Copy,
 } from "lucide-react";
 import api from "./api";
 
@@ -23,7 +24,13 @@ const ProductManagement = () => {
     name: "",
     category_id: "",
     description: "",
+    size_quantity: "",
+    size_unit: "g",
     image_url: "",
+    brand: "",
+    mrp: "",
+    actual_price: "",
+    stock_quantity: "",
   });
 
   const fetchData = async () => {
@@ -46,10 +53,19 @@ const ProductManagement = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
+      // Combine size_quantity and size_unit into size
+      const size = formData.size_quantity ? `${formData.size_quantity}${formData.size_unit}` : null;
+      const submitData = {
+        ...formData,
+        size,
+        size_quantity: undefined,
+        size_unit: undefined,
+      };
+      
       if (modalMode === "add") {
-        await api.post("/admin/products", formData);
+        await api.post("/admin/products", submitData);
       } else {
-        await api.put(`/admin/products/${currentProduct.id}`, formData);
+        await api.put(`/admin/products/${currentProduct.id}`, submitData);
       }
       resetForm();
       fetchData();
@@ -77,13 +93,36 @@ const ProductManagement = () => {
       name: p.name,
       category_id: p.category_id,
       description: p.description || "",
+      size_quantity: p.size ? p.size.match(/^(\d+\.?\d*)/)?.[1] || "" : "",
+      size_unit: p.size ? p.size.match(/(kg|g|L|ml|pieces?)$/i)?.[0] || "g" : "g",
       image_url: p.image_url || "",
+      brand: p.brand || "",
+      mrp: p.mrp || "",
+      actual_price: p.actual_price || "",
+    });
+    setShowModal(true);
+  };
+
+  // Clone product function
+  const handleCloneProduct = (p) => {
+    setCurrentProduct(null); // Set to null so it creates a new product
+    setFormData({
+      name: `${p.name} (Copy)`,
+      category_id: p.category_id,
+      description: p.description || "",
+      size_quantity: p.size ? p.size.match(/^(\d+\.?\d*)/)?.[1] || "" : "",
+      size_unit: p.size ? p.size.match(/(kg|g|L|ml|pieces?)$/i)?.[0] || "g" : "g",
+      image_url: p.image_url || "",
+      brand: p.brand || "",
+      mrp: p.mrp || "",
+      actual_price: p.actual_price || "",
+      stock_quantity: "",
     });
     setShowModal(true);
   };
 
   const resetForm = () => {
-    setFormData({ name: "", category_id: "", description: "", image_url: "" });
+    setFormData({ name: "", category_id: "", description: "", size_quantity: "", size_unit: "g", image_url: "", brand: "", mrp: "", actual_price: "", stock_quantity: "" });
     setCurrentProduct(null);
     setShowModal(false);
   };
@@ -127,14 +166,16 @@ const ProductManagement = () => {
             <thead>
               <tr className="bg-gray-900/50 text-gray-400 text-xs uppercase tracking-widest font-black">
                 <th className="px-6 py-4">Product Info</th>
+                <th className="px-6 py-4">Brand</th>
                 <th className="px-6 py-4">Category</th>
+                <th className="px-6 py-4">Pricing</th>
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-800">
               {loading ? (
                 <tr>
-                  <td colSpan="3" className="py-20 text-center">
+                  <td colSpan="5" className="py-20 text-center">
                     <Loader2
                       className="animate-spin mx-auto text-emerald-500"
                       size={32}
@@ -169,9 +210,26 @@ const ProductManagement = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4">
+                      <p className="text-gray-300 text-sm">{p.brand || "-"}</p>
+                    </td>
+                    <td className="px-6 py-4">
                       <span className="text-xs font-bold px-2 py-1 rounded-full bg-indigo-500/10 text-indigo-500">
                         {p.category_name}
                       </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      {p.mrp || p.actual_price ? (
+                        <div className="text-sm">
+                          {p.mrp && (
+                            <p className="text-gray-500 line-through">₹{parseFloat(p.mrp).toFixed(2)}</p>
+                          )}
+                          {p.actual_price && (
+                            <p className="text-emerald-400 font-bold">₹{parseFloat(p.actual_price).toFixed(2)}</p>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 text-sm">-</p>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -180,6 +238,13 @@ const ProductManagement = () => {
                           className="p-2 text-blue-400 hover:bg-blue-400/10 rounded-lg"
                         >
                           <Edit size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleCloneProduct(p)}
+                          className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-lg"
+                          title="Clone Product"
+                        >
+                          <Copy size={16} />
                         </button>
                         <button
                           onClick={() => handleDelete(p.id)}
@@ -245,6 +310,101 @@ const ProductManagement = () => {
                     </option>
                   ))}
                 </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-400 mb-1 uppercase tracking-widest">
+                  Brand
+                </label>
+                <input
+                  type="text"
+                  value={formData.brand}
+                  onChange={(e) =>
+                    setFormData({ ...formData, brand: e.target.value })
+                  }
+                  placeholder="e.g., Nestle, Amul, Britannia"
+                  className="w-full bg-gray-900/50 border border-gray-800 rounded-2xl py-3 px-4 text-white focus:border-emerald-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-400 mb-1 uppercase tracking-widest">
+                  Product Size/Weight
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.size_quantity}
+                    onChange={(e) =>
+                      setFormData({ ...formData, size_quantity: e.target.value })
+                    }
+                    placeholder="Quantity"
+                    className="w-full bg-gray-900/50 border border-gray-800 rounded-2xl py-3 px-4 text-white focus:border-emerald-500 focus:outline-none"
+                  />
+                  <select
+                    value={formData.size_unit}
+                    onChange={(e) =>
+                      setFormData({ ...formData, size_unit: e.target.value })
+                    }
+                    className="w-full bg-gray-900/50 border border-gray-800 rounded-2xl py-3 px-4 text-white focus:border-emerald-500 focus:outline-none"
+                  >
+                    <option value="g">g (grams)</option>
+                    <option value="kg">kg (kilograms)</option>
+                    <option value="ml">ml (milliliters)</option>
+                    <option value="L">L (liters)</option>
+                    <option value="piece">piece</option>
+                    <option value="pieces">pieces</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-gray-400 mb-1 uppercase tracking-widest">
+                    MRP (₹)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.mrp}
+                    onChange={(e) =>
+                      setFormData({ ...formData, mrp: e.target.value })
+                    }
+                    placeholder="Maximum Retail Price"
+                    className="w-full bg-gray-900/50 border border-gray-800 rounded-2xl py-3 px-4 text-white focus:border-emerald-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-400 mb-1 uppercase tracking-widest">
+                    Actual Price (₹)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.actual_price}
+                    onChange={(e) =>
+                      setFormData({ ...formData, actual_price: e.target.value })
+                    }
+                    placeholder="Selling Price"
+                    className="w-full bg-gray-900/50 border border-gray-800 rounded-2xl py-3 px-4 text-white focus:border-emerald-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-400 mb-1 uppercase tracking-widest">
+                  Initial Stock Quantity
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={formData.stock_quantity}
+                  onChange={(e) =>
+                    setFormData({ ...formData, stock_quantity: e.target.value })
+                  }
+                  placeholder="Enter initial stock (optional)"
+                  className="w-full bg-gray-900/50 border border-gray-800 rounded-2xl py-3 px-4 text-white focus:border-emerald-500 focus:outline-none"
+                />
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-400 mb-1 uppercase tracking-widest">
